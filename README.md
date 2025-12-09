@@ -2,11 +2,15 @@
 
 Write a class named **AnimalGame** for playing an animal-themed abstract board game, described below.
 
-One side's pieces are colored tangerine and the other side's pieces are colored amethyst (you don't need to display any colors, but having names for the two sides will help us talk about them). You will need to keep track of which player's turn it is. The tangerine player moves first.
+One side's pieces are colored tangerine and the other side's pieces are colored amethyst 
+(you don't need to display any colors, but having names for the two sides will help us talk about them). 
+You will need to keep track of which player's turn it is. The tangerine player moves first.
 
-The game takes place on a 7x7 grid. Locations on the board will be specified using "algebraic notation", with columns labeled a-g and rows labeled 1-7.
+The game takes place on a 7x7 grid. Locations on the board will be specified using "algebraic notation", with columns labeled a-g 
+and rows labeled 1-7.
 
-**Piece movements**: The table below gives the names and movements for each piece (like the colors of the two sides, the names of the pieces don't affect the game and are just to make talking about them easier).
+**Piece movements**: The table below gives the names and movements for each piece 
+(like the colors of the two sides, the names of the pieces don't affect the game and are just to make talking about them easier).
 * The _distance_ is the number of squares a piece can move in its given direction.
 * The _locomotion_ is either sliding or jumping. A sliding piece can move any (nonzero) number of squares up to its distance in a straight line, but is blocked if a piece is in the way. A jumping piece must move its full number of squares in a straight line, but it cannot be blocked. It technically doesn't matter if a piece with distance 1 is sliding or jumping.
 * The _direction_ a piece moves is either orthogonal or diagonal (orthogonal just means vertical or horizontal). However, any diagonal-moving piece can also move 1 square orthogonally **instead of** its normal move and any orthogonal-moving piece can also move 1 square diagonally **instead of** its normal move. It technically doesn't matter if a piece with distance 1 is orthogonal or diagonal.
@@ -30,7 +34,8 @@ The game takes place on a 7x7 grid. Locations on the board will be specified usi
 
 If a player's cuttlefish is captured, the game ends, and that player loses.
 
-You must write a class for each piece type that contains the logic for how that piece can legally move. You must write a Piece class that all the classes for the different piece types inherit from. The data members and methods of these classes are up to you.
+You must write a class for each piece type that contains the logic for how that piece can legally move. You must write a Piece class 
+that all the classes for the different piece types inherit from. The data members and methods of these classes are up to you.
 
 Your AnimalGame class must include the following:
 * An **init method** that initializes any data members
