@@ -8,7 +8,6 @@
 # The game takes place on a 7x7 grid. Locations on the board will be specified using "algebraic notation",
 # with columns labeled a-g and rows labeled 1-7.
 
-
 class Piece:
     '''Piece class represents each of the pieces in the game. There will be 14 instances that will be initialized
     by the AnimalGame __init__ method. All of the Piece instances will be sub-classes of Piece that will inherit
@@ -24,7 +23,7 @@ class Piece:
         self._direction = direction
         self._locomotion = locomotion
 
-    def is_valid_move(self, board, row_from, col_from, row_to, col_to):
+    def is_valid_move(self, board, x1, y1, x2, y2):
         '''Determines if the move is valid, this is a method that is designed to be called by AnimalGame make_move() method, returns True
          if the move is a valid move and False if the move is not a valid move. Takes three arguments, two of which will
          be the arguments passed to make_move(), the other will be the current board of the AnimalGame instance, which
@@ -32,132 +31,70 @@ class Piece:
          with the data members of the instance of Piece (which will be determined when the sub-classes are instantiated)
          This method interacts with every class of the program'''
         # check if p_moved_to has a friendly piece
-        if board[row_to][col_to] is not None and board[row_to][col_to].get_owner() == self._owner:
+        if board[x2][y2] is not None and board[x2][y2].get_owner() == self._owner:
             return False
 
-        # check diagonal moves
-        if row_from != row_to and col_to != col_from:
-            # check if it is a straight line diagonal move
-            if abs(col_to - col_from) != abs(row_to - row_from):
-                return False
-            distance = abs(col_to - col_from)
-            # check if it is a diagonal moving piece or if piece does not match the move the distance specified for
-            # orthogonal moving piece can move up to 1 space diagonally but not more than 1
-            if self._direction == 'orthogonal' and distance > 1:
-                return False
-            if self._direction == 'diagonal':
-                # if piece is jumping, it must match distance exactly
-                if self._locomotion == 'jumping' and self._distance != distance:
+        x_delta = x2 - x1
+        y_delta = y2 - y1
+
+        if abs(x_delta) == abs(y_delta):
+            direction = 'diagonal'
+            move_distance = abs(x_delta)
+
+        elif x_delta == 0:
+            direction = 'orthogonal'
+            move_distance = abs(y_delta)
+
+        elif y_delta == 0:
+            direction = 'orthogonal'
+            move_distance = abs(x_delta)
+
+        else:
+            return False
+
+        # check primary movement
+        if self._direction == direction:
+            if self._locomotion == 'jumping' and self._distance == move_distance:
+                return True
+            elif self._locomotion == 'sliding' and self._distance >= move_distance:
+                # check if move is blocked
+                if self.is_blocked(board, x1, y1, x2, y2, x_delta, y_delta):
+                    print('blocked')
                     return False
-                # if piece is sliding it can move up to the distance number of moves
-                elif self._locomotion == 'sliding' and self._distance < distance:
-                    return False
-            # check if there are any pieces blocking the move, must check 4 different scenarios, down-right, down-left, up-left, up-right
+
+                return True
 
 
-            if self._locomotion == 'sliding':
-                # down right move(indexes are both getting bigger)
-                if row_from < row_to and col_from < col_to:
-                    row_check, col_check = row_from + 1, col_from + 1
-                    while row_check < row_to:
-                        if board[row_check][col_check] is not None:
-                            return False
-                        row_check += 1
-                        col_check += 1
+        # check secondary movement
+        elif self._direction != direction:
+            if move_distance == 1:
+                return True
 
-                # up left move(indexes are both getting smaller)
-                if row_from > row_to and col_from > col_to:
-                    row_check, col_check = row_from - 1, col_from - 1
-                    while row_check > row_to:
-                        if board[row_check][col_check] is not None:
-                            return False
-                        row_check -= 1
-                        col_check -= 1
+        return False
 
-                # up right move (row getting smaller, col getting larger
-                if row_from > row_to and col_from < col_to:
-                    row_check, col_check = row_from - 1, col_from + 1
-                    while row_check > row_to and col_check < col_to:
-                        if board[row_check][col_check] is not None:
-                            return False
-                        row_check -= 1
-                        col_check += 1
-                # down left move (row getting larger, column getting smaller)
-                if row_from < row_to and col_from > col_to:
-                    row_check, col_check = row_from + 1, col_from - 1
-                    while row_check < row_to and col_from > col_to:
-                        if board[row_check][col_check] is not None:
-                            return False
-                        row_check += 1
-                        col_check -= 1
+    def is_blocked(self, board, x1, y1, x2, y2, x_delta, y_delta):
+        '''takes a board and coordinates and returns True if there is a piece between the starting point and
+        the end point of the moves'''
+
+        # compute the necessary steps depending on the sign of the x_delta and y_delta
+        if x_delta > 0:
+            x1 += 1
+        elif x_delta < 0:
+            x1 -= 1
+        if y_delta > 0:
+            y1 += 1
+        elif y_delta < 0:
+            y1 -= 1
+
+        # if we make it to the final position, there is nothing blocking the move
+        if x1 == x2 and y1 == y2:
+            return False
+        # if there is a piece at the next space, it is blocked
+        elif board[x1][y1] is not None:
             return True
 
-        # check horizontal moves
-        if row_from == row_to:
-            #check if the piece is a diagonal piece and has to move more than one space orthogonally or if its an orthogonal piece and doesnt match the distance needed
-            distance = abs(col_to - col_from)
-            # if piece is diagonal moving, it can't move more than one space orthogonally
-            if self._direction == 'diagonal' and distance > 1:
-                return False
-            if self._direction == 'orthogonal':
-                # if piece is jumping it must match distance exactly
-                if self._locomotion == 'jumping' and self._distance != distance:
-                    return False
-                # if piece is sliding it can move up to the distance amount of moves
-                elif self._locomotion == 'sliding' and self._distance < distance:
-                    return False
+        return self.is_blocked(board, x1, y1, x2, y2, x_delta, y_delta)
 
-            # check if the piece is moving left or right then determine if there are any pieces blocking the move
-            #if piece is moving right check all the pieces between the moved_from to moved_to
-            if self._locomotion == 'sliding':  # only check sliding pieces
-                if col_from < col_to:
-                    col_check = col_from + 1
-                    while col_check < col_to:
-                        if board[row_from][col_check] is not None:
-                            return False
-                        col_check += 1
-
-                if col_from > col_to:
-                    col_check = col_from - 1
-                    while col_check > col_to:
-                        if board[row_from][col_check] is not None:
-                            return False
-                        col_check -= 1
-
-            return True
-
-        # check vertical moves
-        if col_from == col_to:
-            #check if the piece is a diagonal piece and has to move more than one space orthogonally or if its an orthogonal piece and doesnt match the distance needed
-            distance = abs(row_to - row_from)
-            # if piece is diagonal moving, it can't move more than one space orthogonally
-            if self._direction == 'diagonal' and distance > 1:
-                return False
-            if self._direction == 'orthogonal':
-                # if piece is jumping it must match distance exactly
-                if self._locomotion == 'jumping' and self._distance != distance:
-                    return False
-                # if piece is sliding it can move up to the distance amount of moves
-                elif self._locomotion == 'sliding' and self._distance < distance:
-                    return False
-            # check if the piece is moving down then determine if there are any pieces blocking the move
-            # if piece is moving down check all the pieces between the moved_from to moved_to
-            if self._locomotion == 'sliding':
-                if row_from < row_to:
-                    row_check = row_from + 1
-                    while row_check < row_to:  # check all the spaces from to the right of row_from but stop before row_to
-                        if board[row_check][col_to] is not None:
-                            return False
-                        row_check += 1
-                # check if piece is moving up
-                if row_from > row_to:
-                    row_check = row_from - 1
-                    while row_check > row_to:  # check all the spaces left of row_from but stop before row_to
-                        if board[row_check][col_from] is not None:
-                            return False
-                        row_check -= 1
-
-            return True
 
 
     def get_owner(self):
@@ -308,3 +245,21 @@ class AnimalGame:
             print(f'It is {self._turn}\'s turn')
         else:
             print(f'Game Over {self._game_state}')
+
+
+# a1 = AnimalGame()
+# # for row in a1._board:
+# #     for piece in row:
+# #         print(type(piece).__name__, end='')
+# #     print()
+# # print(type(3))
+# print(a1.make_move('d1', 'f3'))
+# print(a1.make_move('g7','g4'))
+# print(a1.make_move('g1', 'g4'))
+# print(a1.make_move('a7', 'b6'))
+# print(a1.make_move('b1', 'c2'))
+# print(a1.make_move('b6', 'b4'))
+# print(a1.make_move('g4', 'd4'))
+# print(a1.make_move('b4', 'd4'))
+# print(a1.make_move('a1', 'a3'))
+# print(a1.make_move('b7', 'b6'))
